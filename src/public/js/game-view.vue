@@ -37,7 +37,7 @@
 			<div class="stripe">
 				<div id="game-info" class="stripe-content canvas-aligned">
 					<h1 class="prompt" v-show="promptVisible">{{ promptText }}</h1>
-					<h2 class="current-turn" :style="{ color: userColor }">{{ whoseTurnText }}</h2>
+					<h2 class="current-turn" :style="{ color: userColor }">{{ whoseTurnText }} {{ whichRoundText }}</h2>
 				</div>
 			</div>
 			<div class="stripe flex-center">
@@ -67,9 +67,17 @@
 							New Round
 						</button>
 						<button
+							class="btn primary big"
+							@click="submitVote"
+							v-show="votePending"
+							:disabled="!votePending"
+						>
+							Submit Vote
+						</button>
+						<button
 							class="btn primary submit-drawing"
 							@click="submit"
-							v-show="!roundOver"
+							v-show="!roundOver && !votePending"
 							:disabled="!actionsEnabled"
 						>
 							Submit
@@ -77,7 +85,7 @@
 						<button
 							class="btn secondary undo-drawing"
 							@click="undo"
-							v-show="!roundOver"
+							v-show="!roundOver && !votePending"
 							:disabled="!actionsEnabled"
 						>
 							Undo
@@ -231,16 +239,39 @@ export default {
 		promptText() {
 			return `${this.gameState.keyword} (${this.gameState.hint})`;
 		},
+		whichRoundText() {
+			let statusField;
+			if (this.gameState.phase === GAME_PHASE.PLAY) {
+				return `Round ${Math.floor(((this.gameState.turn - 1) / this.gameState.users.length) + 1)} (out of 2)` 
+			} 
+			else if (this.gameState.phase === GAME_PHASE.VOTE) {
+				return 'Voting Round. Who do you think is the fake artist?'
+			} 
+			else if (this.gameState.phase === GAME_PHASE.RESULTS) {
+				statusField = 'Results';
+			} else {
+				return '';
+			}
+		},
 		whoseTurnText() {
-			return this.gameState.phase === GAME_PHASE.VOTE
-				? 'Time to vote!'
-				: `${this.gameState.whoseTurn}'s turn`;
+			if (this.gameState.phase === GAME_PHASE.PLAY) {
+				return `${this.gameState.whoseTurn}'s turn -`;
+			}
+			else {
+				return '';
+			}
+
 		},
 		userColor() {
 			return this.gameState.getUserColor(this.gameState.whoseTurn);
 		},
+		votePending() {
+			return false;
+			//return this.gameState.phase === GAME_PHASE.VOTE;
+		},
 		roundOver() {
 			return this.gameState.phase === GAME_PHASE.VOTE;
+			//return this.gameState.phase === GAME_PHASE.RESULTS;
 		},
 		actionsEnabled() {
 			return (
@@ -250,6 +281,21 @@ export default {
 		roundAndTurn() {
 			return this.gameState.round + '-' + this.gameState.turn;
 		},
+		parseMostVotedUsers() {
+			let mostVotedUser = 'None';
+			let mostVotedUsersResult = this.gameState.whoHasMostVotes;
+			
+			if (mostVotedUsersResult.length > 1) {
+				mostVotedUser = mostVotedUsersResult[0];
+				for (user in mostVotedUsersResult.slice(1)) {
+					mostVotedUser = mostVotedUser + " and " + user;
+				}
+			} else if (mostVotedUsersResult.length === 1) {
+				mostVotedUser = mostVotedUsersResult[0];
+			}
+
+			return mostVotedUser;
+		}
 	},
 	watch: {
 		roundAndTurn() {
@@ -293,6 +339,11 @@ export default {
 
 				this.stroke.reset();
 				this.canvasState = CanvasState.SPECTATE;
+			}
+		},
+		submitVote() {
+			if (true) {
+				this.gameState.phase = GAME_PHASE.RESULTS;
 			}
 		},
 		newRound() {

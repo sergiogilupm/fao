@@ -3,7 +3,7 @@
 		<li v-for="u in users" :key="'0' + u.name">
 			<span v-if="u.connected" :style="{ color: color(u) }"><user-icon /></span>
 			<span v-else><wifi-off-icon /></span>
-			<span class="username" :style="{ color: color(u) }">{{ u.name }}</span>
+			<span class="username" :style="{ color: color(u)}">{{ u.name }}</span>
 		</li>
 	</ul>
 </template>

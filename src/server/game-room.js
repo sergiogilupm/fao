@@ -77,6 +77,22 @@ class GameRoom {
 		// If anyone disconnected during the game, forget about them during setup
 		this.users = this.users.filter((u) => u.connected);
 	}
+	whoHasMostVotes() {
+		let nominatedUser = [];
+		let currentMaxNominations = 0;
+		for (user in this.users) {
+			
+			if (user.nominations > currentMaxNominations) {
+				nominatedUser = [user.name];
+				currentMaxNominations = user.nominations
+			}
+
+			else if (user.nominations === currentMaxNominations) {
+				nominatedUser.push[user.name];
+			}
+		}
+		return nominatedUser;
+	}
 	whoseTurn() {
 		if (this.phase === GAME_PHASE.PLAY) {
 			let idx = (this.turn - 1) % this.users.length;
